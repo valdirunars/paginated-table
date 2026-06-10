@@ -1,6 +1,10 @@
 import type { Dispatch, SetStateAction } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { PaginationState } from "@tanstack/react-table";
+import {
+  DEFAULT_INITIAL_PAGE_SIZE,
+  SEARCH_DEBOUNCE_MS,
+} from "../constants";
 
 type PaginatedPageResult<TData> = {
   data: TData[];
@@ -11,8 +15,6 @@ type PaginatedPageResult<TData> = {
     totalPages: number;
   };
 };
-
-const SEARCH_DEBOUNCE_MS = 300;
 
 type UsePaginatedPageDataArgs<TData> = {
   fetchPage: (
@@ -40,7 +42,7 @@ export type PaginatedPageDataState<TData> = {
 
 export function usePaginatedPageData<TData>({
   fetchPage,
-  initialPageSize = 200,
+  initialPageSize = DEFAULT_INITIAL_PAGE_SIZE,
   searchDebounceMs = SEARCH_DEBOUNCE_MS,
   fallbackErrorMessage,
 }: UsePaginatedPageDataArgs<TData>): PaginatedPageDataState<TData> {
@@ -58,11 +60,14 @@ export function usePaginatedPageData<TData>({
   const requestIdRef = useRef(0);
   const lastAppliedSearchRef = useRef("");
 
-  const setSearchQuery: Dispatch<SetStateAction<string>> = useCallback((nextQuery) => {
-    setSearchQueryState((previousQuery) =>
-      typeof nextQuery === "function" ? nextQuery(previousQuery) : nextQuery,
-    );
-  }, []);
+  const setSearchQuery: Dispatch<SetStateAction<string>> = useCallback(
+    (nextQuery) => {
+      setSearchQueryState((previousQuery) =>
+        typeof nextQuery === "function" ? nextQuery(previousQuery) : nextQuery,
+      );
+    },
+    [],
+  );
 
   useEffect(() => {
     const timeout = setTimeout(() => {

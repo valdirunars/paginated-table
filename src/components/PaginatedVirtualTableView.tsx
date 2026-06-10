@@ -1,5 +1,7 @@
 import { flexRender } from "@tanstack/react-table";
 import type { ColumnDef, PaginationState, Table } from "@tanstack/react-table";
+import type { ReactNode } from "react";
+import { useState } from "react";
 import type { BulkActionType } from "../data/types";
 import { assertNever } from "../utils";
 
@@ -14,6 +16,32 @@ const getBulkActionLabel = (action: BulkActionType): string => {
   }
 };
 
+type BulkActionConfirmationValue<TData> =
+  | ReactNode
+  | ((selectedItems: TData[]) => ReactNode);
+
+type BulkActionConfirmationConfig<TData> = {
+  title?: BulkActionConfirmationValue<TData>;
+  description?: BulkActionConfirmationValue<TData>;
+  confirmButtonText?: string;
+  cancelButtonText?: string;
+  renderPreview?: (selectedItems: TData[]) => ReactNode;
+};
+
+export type BulkActionConfig<TData> = {
+  type: BulkActionType;
+  label?: string;
+  confirmation?: BulkActionConfirmationConfig<TData>;
+};
+
+const resolveBulkActionConfirmationValue = <TData,>(
+  value: BulkActionConfirmationValue<TData> | undefined,
+  selectedItems: TData[],
+): ReactNode =>
+  typeof value === "function"
+    ? (value as (items: TData[]) => ReactNode)(selectedItems)
+    : value;
+
 type PaginatedVirtualTableViewProps<TData> = {
   title: string;
   itemNounPlural: string;
@@ -24,8 +52,8 @@ type PaginatedVirtualTableViewProps<TData> = {
   totalItems: number;
   totalPages: number;
   selectedRowsCount: number;
-  bulkActions?: BulkActionType[];
-  onBulkAction?: (action: BulkActionType) => void;
+  bulkActions?: Array<BulkActionConfig<TData>>;
+  onBulkAction?: (action: BulkActionType, selectedItems: TData[]) => void;
   searchQuery: string;
   onSearchQueryChange: (value: string) => void;
   isLoading: boolean;
@@ -52,6 +80,10 @@ export function PaginatedVirtualTableView<TData>({
   onRetry,
 }: PaginatedVirtualTableViewProps<TData>) {
   const { rows } = table.getRowModel();
+  const selectedItems = table.getSelectedRowModel().rows.map((row) => row.original);
+  const [pendingAction, setPendingAction] = useState<BulkActionConfig<TData> | null>(
+    null,
+  );
   const skeletonRows = Array.from(
     { length: Math.max(6, pagination.pageSize) },
     (_, rowIndex) => ({
@@ -61,6 +93,11 @@ export function PaginatedVirtualTableView<TData>({
       })),
     }),
   );
+
+  const executeBulkAction = (actionType: BulkActionType) => {
+    onBulkAction?.(actionType, selectedItems);
+    setPendingAction(null);
+  };
 
   return (
     <div className="users-table-container">
@@ -105,17 +142,23 @@ export function PaginatedVirtualTableView<TData>({
             </button>
             {bulkActions.map((action) => (
               <button
-                key={action}
+                key={action.type}
                 type="button"
                 className={`users-table-bulk-btn${
                   selectedRowsCount > 0 ? "" : " users-table-bulk-btn--hidden"
                 }`}
-                onClick={() => onBulkAction?.(action)}
+                onClick={() => {
+                  if (action.confirmation) {
+                    setPendingAction(action);
+                    return;
+                  }
+                  executeBulkAction(action.type);
+                }}
                 disabled={selectedRowsCount === 0}
                 tabIndex={selectedRowsCount > 0 ? 0 : -1}
                 aria-hidden={selectedRowsCount === 0}
               >
-                {getBulkActionLabel(action)}
+                {action.label ?? getBulkActionLabel(action.type)}
               </button>
             ))}
           </div>
@@ -237,6 +280,49 @@ export function PaginatedVirtualTableView<TData>({
           </div>
         </div>
       </div>
+      {pendingAction?.confirmation ? (
+        <div className="users-table-modal-backdrop" role="presentation">
+          <div className="users-table-modal" role="dialog" aria-modal="true">
+            <h2 className="users-table-modal-title">
+              {resolveBulkActionConfirmationValue(
+                pendingAction.confirmation.title ??
+                  `Confirm ${getBulkActionLabel(pendingAction.type).toLowerCase()}`,
+                selectedItems,
+              )}
+            </h2>
+            {pendingAction.confirmation.description ? (
+              <p className="users-table-modal-description">
+                {resolveBulkActionConfirmationValue(
+                  pendingAction.confirmation.description,
+                  selectedItems,
+                )}
+              </p>
+            ) : null}
+            {pendingAction.confirmation.renderPreview ? (
+              <div className="users-table-modal-preview">
+                {pendingAction.confirmation.renderPreview(selectedItems)}
+              </div>
+            ) : null}
+            <div className="users-table-modal-actions">
+              <button
+                type="button"
+                className="users-table-bulk-btn"
+                onClick={() => setPendingAction(null)}
+              >
+                {pendingAction.confirmation.cancelButtonText ?? "Cancel"}
+              </button>
+              <button
+                type="button"
+                className="users-table-bulk-btn users-table-bulk-btn--danger"
+                onClick={() => executeBulkAction(pendingAction.type)}
+              >
+                {pendingAction.confirmation.confirmButtonText ??
+                  getBulkActionLabel(pendingAction.type)}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

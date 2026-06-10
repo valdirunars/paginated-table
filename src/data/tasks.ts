@@ -7,10 +7,8 @@ import {
   type PaginatedMockItemsResult,
 } from "./mockItem";
 import { generateTaskName } from "./taskMockData";
+import { FETCH_DELAY_MS, RANDOM_ERROR_PROBABILITY } from "../constants";
 import type { Task } from "./types";
-
-const RANDOM_ERROR_PROBABILITY = 0.1;
-const FETCH_DELAY_MS = 1000;
 
 export type PaginatedTasksResult = PaginatedMockItemsResult<"task">;
 

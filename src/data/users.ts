@@ -5,10 +5,8 @@ import {
   writeItems,
   type PaginatedMockItemsResult,
 } from "./mockItem";
+import { FETCH_DELAY_MS, RANDOM_ERROR_PROBABILITY } from "../constants";
 import type { User } from "./types";
-
-const RANDOM_ERROR_PROBABILITY = 0.1;
-const FETCH_DELAY_MS = 1000;
 
 export type PaginatedUsersResult = PaginatedMockItemsResult<"user">;
 
