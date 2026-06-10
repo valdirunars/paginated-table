@@ -1,4 +1,5 @@
 import type { ItemType, ItemTypeMap } from "./types";
+import { assertNever } from "../utils";
 import { rankItem } from "@tanstack/match-sorter-utils";
 
 export type MockItem<T extends ItemType = ItemType> = ItemTypeMap[T] & {
@@ -32,13 +33,38 @@ export function readAllItems<T extends ItemType>(type: T): MockItem<T>[] {
   }
 }
 
-export function readItems<T extends ItemType>(
-  type: T,
+export function readItems(
+  type: "task",
+  page: number,
+  pageSize: number,
+  searchQuery?: string,
+): PaginatedMockItemsResult<"task">;
+
+export function readItems(
+  type: "user",
+  page: number,
+  pageSize: number,
+  searchQuery?: string,
+): PaginatedMockItemsResult<"user">;
+
+export function readItems(
+  type: ItemType,
   page: number,
   pageSize: number,
   searchQuery: string = "",
-): PaginatedMockItemsResult<T> {
-  const items = readAllItems(type);
+): PaginatedMockItemsResult<ItemType> {
+  let items: MockItem<ItemType>[];
+  switch (type) {
+    case "task":
+      items = readAllItems("task").filter((item) => !item.isArchived);
+      break;
+    case "user":
+      items = readAllItems("user");
+      break;
+    default:
+      return assertNever(type);
+  }
+
   const normalizedQuery = searchQuery.trim();
   const filteredItems =
     normalizedQuery.length === 0
@@ -50,8 +76,8 @@ export function readItems<T extends ItemType>(
                 return [];
               }
               if (typeof value === "object") {
-                return Object.values(value as Record<string, unknown>).map((nested) =>
-                  String(nested),
+                return Object.values(value as Record<string, unknown>).map(
+                  (nested) => String(nested),
                 );
               }
               return [String(value)];
