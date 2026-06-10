@@ -1,73 +1,61 @@
-# React + TypeScript + Vite
+# Paginated Table Demo
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A React + TypeScript + Vite demo app for a paginated, searchable, selectable virtualized table with bulk actions.
 
-Currently, two official plugins are available:
+## Run the app
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+### 1) Install dependencies
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### 2) Start the dev server
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm run dev
 ```
+
+Open the local URL printed by Vite (usually `http://localhost:5173`).
+
+## Other useful commands
+
+```bash
+npm run build   # Type-check and create a production build
+npm run preview # Preview the production build locally
+npm run lint    # Run ESLint
+```
+
+## Where to tweak things
+
+- `src/constants.ts`
+  - `DEFAULT_INITIAL_PAGE_SIZE`: default rows per page.
+  - `SEARCH_DEBOUNCE_MS`: debounce time for search input.
+  - `FETCH_DELAY_MS`: simulated network delay.
+  - `RANDOM_ERROR_PROBABILITY`: chance of simulated fetch failure.
+
+- `src/App.tsx`
+  - Initial mock data is seeded here if local storage is empty.
+
+- `src/data/tasks.ts` and `src/data/users.ts`
+  - Adjust mock data generation and fetch behavior.
+  - `populateTasks()` / `populateUsers()` control seeded dataset size.
+
+- `src/hooks/usePaginatedPageData.ts`
+  - Shared pagination/search fetching logic.
+  - Good place to tune loading/error/reset behavior.
+
+- `src/components/PaginatedVirtualTableView.tsx`
+  - Generic table UI: header, search box, row rendering, pagination controls, and bulk-action confirmation modal.
+
+- `src/TasksVirtualTable.tsx` and `src/UsersVirtualTable.tsx`
+  - Feature-specific table wiring (columns, actions, labels, and bulk action handlers).
+
+- `src/App.css`
+  - Main styling for table layout, controls, modal, and states.
+  - I selected this way of styling mainly to make components a little less noisy (e.g. no tailwind css strings all over the place) but I generally prefer tailwind
+
+## Notes
+
+- Data is stored in `localStorage` under `mockItems:*` keys.
+- To reset demo data, clear site storage in your browser and reload.
