@@ -52,7 +52,12 @@ type UsePaginatedTableModelArgs<TData extends { id: number }> = {
   setPagination: Dispatch<SetStateAction<PaginationState>>;
   totalItems: number;
   totalPages: number;
+  selectionMode?: TableSelectionMode;
 };
+
+export type TableSelectionMode =
+  | { type: "multi" }
+  | { type: "single"; behavior: "soft" | "hard" };
 
 export type PaginatedTableModel<TData extends { id: number }> = {
   columns: Array<ColumnDef<TData>>;
@@ -65,7 +70,12 @@ export function withSelectionColumn<TData extends { id: number }>(
   columns: Array<ColumnDef<TData>>,
   getItemLabel: (item: TData) => string,
   getPluralLabel: () => string,
+  selectionMode: TableSelectionMode = { type: "multi" },
 ): Array<ColumnDef<TData>> {
+  if (selectionMode.type === "single") {
+    return columns;
+  }
+
   return [
     {
       id: "select",
@@ -99,6 +109,7 @@ export function usePaginatedTableModel<TData extends { id: number }>({
   setPagination,
   totalItems,
   totalPages,
+  selectionMode = { type: "multi" },
 }: UsePaginatedTableModelArgs<TData>): PaginatedTableModel<TData> {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
@@ -114,6 +125,7 @@ export function usePaginatedTableModel<TData extends { id: number }>({
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     enableRowSelection: true,
+    enableMultiRowSelection: selectionMode.type === "multi",
     manualPagination: true,
     pageCount: totalPages,
     rowCount: totalItems,

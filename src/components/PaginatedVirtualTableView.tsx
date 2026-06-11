@@ -3,10 +3,13 @@ import type { ColumnDef, PaginationState, Table } from "@tanstack/react-table";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import type { BulkActionType } from "../data/types";
+import type { TableSelectionMode } from "../hooks/usePaginatedTableModel";
 import { assertNever } from "../utils";
 
 const getBulkActionLabel = (action: BulkActionType): string => {
   switch (action) {
+    case "assign":
+      return "Assign";
     case "archive":
       return "Archive";
     case "delete":
@@ -42,7 +45,7 @@ const resolveBulkActionConfirmationValue = <TData,>(
     ? (value as (items: TData[]) => ReactNode)(selectedItems)
     : value;
 
-type PaginatedVirtualTableViewProps<TData> = {
+type PaginatedVirtualTableViewBaseProps<TData> = {
   title: string;
   itemNounPlural: string;
   emptyStateText: string;
@@ -52,6 +55,8 @@ type PaginatedVirtualTableViewProps<TData> = {
   totalItems: number;
   totalPages: number;
   selectedRowsCount: number;
+  selectionMode?: TableSelectionMode;
+  showBulkActions?: boolean;
   bulkActions?: Array<BulkActionConfig<TData>>;
   onBulkAction?: (action: BulkActionType, selectedItems: TData[]) => void;
   searchQuery: string;
@@ -59,7 +64,18 @@ type PaginatedVirtualTableViewProps<TData> = {
   isLoading: boolean;
   errorMessage: string | null;
   onRetry: () => void;
+  showPageHeader?: boolean;
 };
+
+type PaginatedVirtualTableViewProps<TData> =
+  | (PaginatedVirtualTableViewBaseProps<TData> & {
+      selectionMode?: { type: "multi" } | { type: "single"; behavior: "soft" };
+      onSingleSelect?: (item: TData) => void;
+    })
+  | (PaginatedVirtualTableViewBaseProps<TData> & {
+      selectionMode: { type: "single"; behavior: "hard" };
+      onSingleSelect: (item: TData) => void;
+    });
 
 export function PaginatedVirtualTableView<TData>({
   title,
@@ -71,6 +87,9 @@ export function PaginatedVirtualTableView<TData>({
   totalItems,
   totalPages,
   selectedRowsCount,
+  selectionMode = { type: "multi" },
+  onSingleSelect,
+  showBulkActions = true,
   bulkActions = [],
   onBulkAction,
   searchQuery,
@@ -78,9 +97,11 @@ export function PaginatedVirtualTableView<TData>({
   isLoading,
   errorMessage,
   onRetry,
+  showPageHeader = true,
 }: PaginatedVirtualTableViewProps<TData>) {
   const { rows } = table.getRowModel();
   const selectedItems = table.getSelectedRowModel().rows.map((row) => row.original);
+  const hasLoadError = Boolean(errorMessage);
   const [pendingAction, setPendingAction] = useState<BulkActionConfig<TData> | null>(
     null,
   );
@@ -99,15 +120,26 @@ export function PaginatedVirtualTableView<TData>({
     setPendingAction(null);
   };
 
+  const headerPageInfo = isLoading
+    ? `Loading page ${pagination.pageIndex + 1}...`
+    : hasLoadError
+      ? `Showing page ${pagination.pageIndex + 1} (unable to load total pages, ${totalItems} ${itemNounPlural})`
+      : `Showing page ${pagination.pageIndex + 1} of ${totalPages} (${totalItems} ${itemNounPlural})`;
+
+  const footerPageInfo = isLoading
+    ? `Page ${pagination.pageIndex + 1} (loading total pages...)`
+    : hasLoadError
+      ? `Page ${pagination.pageIndex + 1} (total pages unavailable)`
+      : `Page ${pagination.pageIndex + 1} of ${totalPages}`;
+
   return (
     <div className="users-table-container">
-      <div className="app-page-header">
-        <h1>{title}</h1>
-        <p className="users-table-page-info">
-          Showing page {pagination.pageIndex + 1} of {totalPages} ({totalItems}{" "}
-          {itemNounPlural})
-        </p>
-      </div>
+      {showPageHeader ? (
+        <div className="app-page-header">
+          <h1>{title}</h1>
+          <p className="users-table-page-info">{headerPageInfo}</p>
+        </div>
+      ) : null}
       <div className="users-table-header">
         <label className="users-table-search">
           <span className="users-table-search-label">Search</span>
@@ -119,50 +151,52 @@ export function PaginatedVirtualTableView<TData>({
             placeholder={`Search ${itemNounPlural}`}
           />
         </label>
-        <div
-          className="users-table-bulk-actions"
-          role={selectedRowsCount > 0 ? "status" : undefined}
-          aria-live={selectedRowsCount > 0 ? "polite" : undefined}
-        >
-          <span className="users-table-bulk-selection">
-            {selectedRowsCount > 0 ? `${selectedRowsCount} selected` : "None selected"}
-          </span>
-          <div className="users-table-bulk-buttons">
-            <button
-              type="button"
-              className={`users-table-bulk-btn${
-                selectedRowsCount > 0 ? "" : " users-table-bulk-btn--hidden"
-              }`}
-              onClick={() => table.resetRowSelection()}
-              disabled={selectedRowsCount === 0}
-              tabIndex={selectedRowsCount > 0 ? 0 : -1}
-              aria-hidden={selectedRowsCount === 0}
-            >
-              Clear selection
-            </button>
-            {bulkActions.map((action) => (
+        {showBulkActions ? (
+          <div
+            className="users-table-bulk-actions"
+            role={selectedRowsCount > 0 ? "status" : undefined}
+            aria-live={selectedRowsCount > 0 ? "polite" : undefined}
+          >
+            <span className="users-table-bulk-selection">
+              {selectedRowsCount > 0 ? `${selectedRowsCount} selected` : "None selected"}
+            </span>
+            <div className="users-table-bulk-buttons">
               <button
-                key={action.type}
                 type="button"
                 className={`users-table-bulk-btn${
                   selectedRowsCount > 0 ? "" : " users-table-bulk-btn--hidden"
                 }`}
-                onClick={() => {
-                  if (action.confirmation) {
-                    setPendingAction(action);
-                    return;
-                  }
-                  executeBulkAction(action.type);
-                }}
+                onClick={() => table.resetRowSelection()}
                 disabled={selectedRowsCount === 0}
                 tabIndex={selectedRowsCount > 0 ? 0 : -1}
                 aria-hidden={selectedRowsCount === 0}
               >
-                {action.label ?? getBulkActionLabel(action.type)}
+                Clear selection
               </button>
-            ))}
+              {bulkActions.map((action) => (
+                <button
+                  key={action.type}
+                  type="button"
+                  className={`users-table-bulk-btn${
+                    selectedRowsCount > 0 ? "" : " users-table-bulk-btn--hidden"
+                  }`}
+                  onClick={() => {
+                    if (action.confirmation) {
+                      setPendingAction(action);
+                      return;
+                    }
+                    executeBulkAction(action.type);
+                  }}
+                  disabled={selectedRowsCount === 0}
+                  tabIndex={selectedRowsCount > 0 ? 0 : -1}
+                  aria-hidden={selectedRowsCount === 0}
+                >
+                  {action.label ?? getBulkActionLabel(action.type)}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        ) : null}
       </div>
       {errorMessage ? (
         <div className="users-table-error" role="alert">
@@ -242,6 +276,19 @@ export function PaginatedVirtualTableView<TData>({
                       if (target.closest("input, button, a")) {
                         return;
                       }
+                      if (selectionMode.type === "single") {
+                        const item = row.original;
+                        table.setRowSelection({ [row.id]: true });
+                        if (
+                          selectionMode.behavior === "hard" &&
+                          onSingleSelect
+                        ) {
+                          onSingleSelect(item);
+                          return;
+                        }
+                        onSingleSelect?.(item);
+                        return;
+                      }
                       row.toggleSelected();
                     }}
                   >
@@ -257,9 +304,7 @@ export function PaginatedVirtualTableView<TData>({
           </table>
         </div>
         <div className="users-table-pagination">
-          <p className="users-table-pagination-info">
-            Page {pagination.pageIndex + 1} of {totalPages}
-          </p>
+          <p className="users-table-pagination-info">{footerPageInfo}</p>
           <div className="users-table-pagination-actions">
             <button
               type="button"

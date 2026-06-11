@@ -3,6 +3,7 @@ import { useMemo } from "react";
 import type { ColumnDef, PaginationState, Table } from "@tanstack/react-table";
 import type { User } from "../data/types";
 import {
+  type TableSelectionMode,
   usePaginatedTableModel,
   withSelectionColumn,
 } from "./usePaginatedTableModel";
@@ -13,6 +14,7 @@ type UsersTableModelArgs = {
   setPagination: Dispatch<SetStateAction<PaginationState>>;
   totalItems: number;
   totalPages: number;
+  selectionMode?: TableSelectionMode;
 };
 
 export type UsersTableModel = {
@@ -28,6 +30,7 @@ export function useUsersTableModel({
   setPagination,
   totalItems,
   totalPages,
+  selectionMode = { type: "multi" },
 }: UsersTableModelArgs): UsersTableModel {
   const baseColumns = useMemo<Array<ColumnDef<User>>>(
     () => [
@@ -56,8 +59,9 @@ export function useUsersTableModel({
         baseColumns,
         (user) => `user ${user.displayName}`,
         () => "users",
+        selectionMode,
       ),
-    [baseColumns],
+    [baseColumns, selectionMode],
   );
 
   const { table, selectedRowsCount, selectedRowIds } = usePaginatedTableModel<User>({
@@ -67,6 +71,7 @@ export function useUsersTableModel({
     setPagination,
     totalItems,
     totalPages,
+    selectionMode,
   });
 
   return {

@@ -3,6 +3,7 @@ import { useMemo } from "react";
 import type { ColumnDef, PaginationState, Table } from "@tanstack/react-table";
 import type { Task } from "../data/types";
 import {
+  type TableSelectionMode,
   usePaginatedTableModel,
   withSelectionColumn,
 } from "./usePaginatedTableModel";
@@ -13,6 +14,7 @@ type TasksTableModelArgs = {
   setPagination: Dispatch<SetStateAction<PaginationState>>;
   totalItems: number;
   totalPages: number;
+  selectionMode?: TableSelectionMode;
 };
 
 export type TasksTableModel = {
@@ -28,6 +30,7 @@ export function useTasksTableModel({
   setPagination,
   totalItems,
   totalPages,
+  selectionMode = { type: "multi" },
 }: TasksTableModelArgs): TasksTableModel {
   const baseColumns = useMemo<Array<ColumnDef<Task>>>(
     () => [
@@ -63,8 +66,9 @@ export function useTasksTableModel({
         baseColumns,
         (task) => `task ${task.name}`,
         () => "tasks",
+        selectionMode,
       ),
-    [baseColumns],
+    [baseColumns, selectionMode],
   );
 
   const { table, selectedRowsCount, selectedRowIds } = usePaginatedTableModel<Task>({
@@ -74,6 +78,7 @@ export function useTasksTableModel({
     setPagination,
     totalItems,
     totalPages,
+    selectionMode,
   });
 
   return {

@@ -20,4 +20,4 @@ export type ItemTypeMap = {
   task: Task;
 };
 
-export type BulkActionType = "archive" | "delete";
+export type BulkActionType = "assign" | "archive" | "delete";

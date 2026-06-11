@@ -20,9 +20,16 @@ export type UsersPageDataState = {
   retry: () => Promise<void>;
 };
 
-export function useUsersPageData(): UsersPageDataState {
+type UseUsersPageDataArgs = {
+  initialPageSize?: number;
+};
+
+export function useUsersPageData({
+  initialPageSize,
+}: UseUsersPageDataArgs = {}): UsersPageDataState {
   const state: PaginatedPageDataState<User> = usePaginatedPageData<User>({
     fetchPage: fetchUsersPage,
+    initialPageSize,
     fallbackErrorMessage: "Failed to fetch users page",
   });
 
