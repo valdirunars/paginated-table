@@ -1,8 +1,8 @@
-import { PaginatedVirtualTableView } from "./components/PaginatedVirtualTableView";
+import { PaginatedTableView } from "./components/PaginatedTableView";
 import { useUsersPageData } from "./hooks/useUsersPageData";
 import { useUsersTableModel } from "./hooks/useUsersTableModel";
 
-function UsersVirtualTable() {
+function UsersTable() {
   const {
     pagination,
     setPagination,
@@ -25,7 +25,7 @@ function UsersVirtualTable() {
   });
 
   return (
-    <PaginatedVirtualTableView
+    <PaginatedTableView
       title="Paginated Users Table"
       itemNounPlural="users"
       emptyStateText="No users found for this page."
@@ -46,4 +46,4 @@ function UsersVirtualTable() {
   );
 }
 
-export default UsersVirtualTable;
+export default UsersTable;

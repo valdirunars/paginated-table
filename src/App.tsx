@@ -1,6 +1,6 @@
 import { populateUsers } from "./data/users";
 import { populateTasks } from "./data/tasks";
-import TasksVirtualTable from "./TasksVirtualTable";
+import TasksTable from "./TasksTable";
 import "./App.css";
 import { useEffect } from "react";
 
@@ -16,8 +16,7 @@ function App() {
 
   return (
     <main className="app">
-      {/* <UsersVirtualTable /> */}
-      <TasksVirtualTable />
+      <TasksTable />
     </main>
   );
 }

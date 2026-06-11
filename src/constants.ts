@@ -1,4 +1,4 @@
-export const DEFAULT_INITIAL_PAGE_SIZE = 100;
+export const DEFAULT_INITIAL_PAGE_SIZE = 25;
 export const SEARCH_DEBOUNCE_MS = 300;
 export const RANDOM_ERROR_PROBABILITY = 0.1;
 export const FETCH_DELAY_MS = 1000;

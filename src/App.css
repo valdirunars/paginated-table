@@ -46,14 +46,77 @@
   z-index: 1;
 }
 
-.users-table-sort-btn {
-  background: transparent;
-  border: 0;
+.button {
   cursor: pointer;
   font: inherit;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.button--default {
+  background: #fff;
+  border: 1px solid #9eb7e7;
+  border-radius: 6px;
+  flex-shrink: 0;
+  padding: 0.35rem 0.65rem;
+}
+
+.button--default:not(:disabled):hover {
+  background: #f0f4fb;
+  border-color: #7a9fd4;
+}
+
+.button--destructive {
+  background: #b4222e;
+  border: 1px solid #9f1e28;
+  border-radius: 6px;
+  color: #fff;
+  flex-shrink: 0;
+  padding: 0.35rem 0.65rem;
+}
+
+.button--destructive:not(:disabled):hover {
+  background: #9f1e28;
+  border-color: #8a1a23;
+}
+
+.button--ghost {
+  background: transparent;
+  border: 0;
   padding: 0;
   text-align: left;
   width: 100%;
+}
+
+.button--ghost:not(:disabled):hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.button--icon {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 2rem;
+  height: 2rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #555;
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.button--icon:not(:disabled):hover {
+  background: #f0f4fb;
+}
+
+.button--hidden {
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
 }
 
 .users-table-header {
@@ -98,21 +161,6 @@
   align-items: center;
   display: flex;
   gap: 0.75rem;
-}
-
-.users-table-bulk-btn {
-  background: #fff;
-  border: 1px solid #9eb7e7;
-  border-radius: 6px;
-  cursor: pointer;
-  flex-shrink: 0;
-  font: inherit;
-  padding: 0.35rem 0.65rem;
-}
-
-.users-table-bulk-btn--hidden {
-  pointer-events: none;
-  visibility: hidden;
 }
 
 .users-table-container {
@@ -199,17 +247,6 @@
   gap: 0.5rem;
 }
 
-.users-table-bulk-btn:disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
-}
-
-.users-table-bulk-btn--danger {
-  background: #b4222e;
-  border-color: #9f1e28;
-  color: #fff;
-}
-
 .users-table-modal-backdrop {
   position: fixed;
   inset: 0;
@@ -229,25 +266,6 @@
   max-width: 36rem;
   width: 100%;
   padding: 1rem 1.25rem;
-}
-
-.users-table-modal-close {
-  position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
-  width: 2rem;
-  height: 2rem;
-  border: 0;
-  border-radius: 999px;
-  background: transparent;
-  color: #555;
-  cursor: pointer;
-  font-size: 1.25rem;
-  line-height: 1;
-}
-
-.users-table-modal-close:hover {
-  background: #f0f4fb;
 }
 
 .users-table-modal-title {

@@ -5,6 +5,7 @@ import {
   writeItems,
   type PaginatedMockItemsResult,
 } from "./mockItem";
+import { generateUserEmail, generateUserName } from "./userMockData";
 import { FETCH_DELAY_MS, RANDOM_ERROR_PROBABILITY } from "../constants";
 import type { User } from "./types";
 
@@ -41,12 +42,15 @@ export const batchUpdateUsers = (users: User[]): void => {
 };
 
 export const populateUsers = (count: number = 200): void => {
-  const users = Array.from({ length: count }, (_, index) => ({
-    id: index + 1,
-    displayName: `User ${index + 1}`,
-    name: `User ${index + 1}`,
-    email: `user${index + 1}@example.com`,
-  }));
+  const users = Array.from({ length: count }, (_, index) => {
+    const name = generateUserName(index);
+    return {
+      id: index + 1,
+      displayName: name,
+      name,
+      email: generateUserEmail(index),
+    };
+  });
 
   writeItems(
     "user",

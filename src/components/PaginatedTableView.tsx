@@ -5,6 +5,7 @@ import { useState } from "react";
 import type { BulkActionType } from "../data/types";
 import type { TableSelectionMode } from "../hooks/usePaginatedTableModel";
 import { assertNever } from "../utils";
+import { Button } from "./Button";
 
 const getBulkActionLabel = (action: BulkActionType): string => {
   switch (action) {
@@ -45,7 +46,7 @@ const resolveBulkActionConfirmationValue = <TData,>(
     ? (value as (items: TData[]) => ReactNode)(selectedItems)
     : value;
 
-type PaginatedVirtualTableViewBaseProps<TData> = {
+type PaginatedTableViewBaseProps<TData> = {
   title: string;
   itemNounPlural: string;
   emptyStateText: string;
@@ -67,17 +68,17 @@ type PaginatedVirtualTableViewBaseProps<TData> = {
   showPageHeader?: boolean;
 };
 
-type PaginatedVirtualTableViewProps<TData> =
-  | (PaginatedVirtualTableViewBaseProps<TData> & {
+type PaginatedTableViewProps<TData> =
+  | (PaginatedTableViewBaseProps<TData> & {
       selectionMode?: { type: "multi" } | { type: "single"; behavior: "soft" };
       onSingleSelect?: (item: TData) => void;
     })
-  | (PaginatedVirtualTableViewBaseProps<TData> & {
+  | (PaginatedTableViewBaseProps<TData> & {
       selectionMode: { type: "single"; behavior: "hard" };
       onSingleSelect: (item: TData) => void;
     });
 
-export function PaginatedVirtualTableView<TData>({
+export function PaginatedTableView<TData>({
   title,
   itemNounPlural,
   emptyStateText,
@@ -98,7 +99,7 @@ export function PaginatedVirtualTableView<TData>({
   errorMessage,
   onRetry,
   showPageHeader = true,
-}: PaginatedVirtualTableViewProps<TData>) {
+}: PaginatedTableViewProps<TData>) {
   const { rows } = table.getRowModel();
   const selectedItems = table.getSelectedRowModel().rows.map((row) => row.original);
   const hasLoadError = Boolean(errorMessage);
@@ -161,25 +162,20 @@ export function PaginatedVirtualTableView<TData>({
               {selectedRowsCount > 0 ? `${selectedRowsCount} selected` : "None selected"}
             </span>
             <div className="users-table-bulk-buttons">
-              <button
-                type="button"
-                className={`users-table-bulk-btn${
-                  selectedRowsCount > 0 ? "" : " users-table-bulk-btn--hidden"
-                }`}
+              <Button
+                hidden={selectedRowsCount === 0}
                 onClick={() => table.resetRowSelection()}
                 disabled={selectedRowsCount === 0}
                 tabIndex={selectedRowsCount > 0 ? 0 : -1}
                 aria-hidden={selectedRowsCount === 0}
               >
                 Clear selection
-              </button>
+              </Button>
               {bulkActions.map((action) => (
-                <button
+                <Button
                   key={action.type}
-                  type="button"
-                  className={`users-table-bulk-btn${
-                    selectedRowsCount > 0 ? "" : " users-table-bulk-btn--hidden"
-                  }`}
+                  variant={action.type === "delete" ? "destructive" : "default"}
+                  hidden={selectedRowsCount === 0}
                   onClick={() => {
                     if (action.confirmation) {
                       setPendingAction(action);
@@ -192,7 +188,7 @@ export function PaginatedVirtualTableView<TData>({
                   aria-hidden={selectedRowsCount === 0}
                 >
                   {action.label ?? getBulkActionLabel(action.type)}
-                </button>
+                </Button>
               ))}
             </div>
           </div>
@@ -201,13 +197,7 @@ export function PaginatedVirtualTableView<TData>({
       {errorMessage ? (
         <div className="users-table-error" role="alert">
           <span>{errorMessage}</span>
-          <button
-            type="button"
-            className="users-table-bulk-btn"
-            onClick={onRetry}
-          >
-            Retry
-          </button>
+          <Button onClick={onRetry}>Retry</Button>
         </div>
       ) : null}
       <div className="users-table-layout">
@@ -223,9 +213,8 @@ export function PaginatedVirtualTableView<TData>({
                       style={{ width: header.getSize() }}
                     >
                       {header.isPlaceholder ? null : header.column.getCanSort() ? (
-                        <button
-                          className="users-table-sort-btn"
-                          type="button"
+                        <Button
+                          variant="ghost"
                           onClick={header.column.getToggleSortingHandler()}
                         >
                           {flexRender(
@@ -236,7 +225,7 @@ export function PaginatedVirtualTableView<TData>({
                             asc: " \u25b2",
                             desc: " \u25bc",
                           }[header.column.getIsSorted() as string] ?? null}
-                        </button>
+                        </Button>
                       ) : (
                         flexRender(
                           header.column.columnDef.header,
@@ -306,22 +295,18 @@ export function PaginatedVirtualTableView<TData>({
         <div className="users-table-pagination">
           <p className="users-table-pagination-info">{footerPageInfo}</p>
           <div className="users-table-pagination-actions">
-            <button
-              type="button"
-              className="users-table-bulk-btn"
+            <Button
               onClick={() => table.previousPage()}
               disabled={!table.getCanPreviousPage() || isLoading}
             >
               Previous
-            </button>
-            <button
-              type="button"
-              className="users-table-bulk-btn"
+            </Button>
+            <Button
               onClick={() => table.nextPage()}
               disabled={!table.getCanNextPage() || isLoading}
             >
               Next
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -349,21 +334,18 @@ export function PaginatedVirtualTableView<TData>({
               </div>
             ) : null}
             <div className="users-table-modal-actions">
-              <button
-                type="button"
-                className="users-table-bulk-btn"
-                onClick={() => setPendingAction(null)}
-              >
+              <Button onClick={() => setPendingAction(null)}>
                 {pendingAction.confirmation.cancelButtonText ?? "Cancel"}
-              </button>
-              <button
-                type="button"
-                className="users-table-bulk-btn users-table-bulk-btn--danger"
+              </Button>
+              <Button
+                variant={
+                  pendingAction.type === "delete" ? "destructive" : "default"
+                }
                 onClick={() => executeBulkAction(pendingAction.type)}
               >
                 {pendingAction.confirmation.confirmButtonText ??
                   getBulkActionLabel(pendingAction.type)}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

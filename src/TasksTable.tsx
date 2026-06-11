@@ -1,4 +1,4 @@
-import { PaginatedVirtualTableView } from "./components/PaginatedVirtualTableView";
+import { PaginatedTableView } from "./components/PaginatedTableView";
 import { UserSelectModal } from "./components/UserSelectModal";
 import {
   assignUserToTasks,
@@ -11,7 +11,7 @@ import { assertNever } from "./utils";
 import { useTasksTableModel } from "./hooks/useTasksTableModel";
 import { useCallback, useState } from "react";
 
-function TasksVirtualTable() {
+function TasksTable() {
   const [selectedTasksForAssignment, setSelectedTasksForAssignment] = useState<
     Task[] | null
   >(null);
@@ -84,7 +84,7 @@ function TasksVirtualTable() {
 
   return (
     <>
-      <PaginatedVirtualTableView
+      <PaginatedTableView
         title="Paginated Tasks Table"
         itemNounPlural="tasks"
         emptyStateText="No tasks found for this page."
@@ -139,4 +139,4 @@ function TasksVirtualTable() {
   );
 }
 
-export default TasksVirtualTable;
+export default TasksTable;

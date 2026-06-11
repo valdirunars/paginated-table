@@ -2,7 +2,8 @@ import { useMemo } from "react";
 import type { Task, User } from "../data/types";
 import { useUsersPageData } from "../hooks/useUsersPageData";
 import { useUsersTableModel } from "../hooks/useUsersTableModel";
-import { PaginatedVirtualTableView } from "./PaginatedVirtualTableView";
+import { Button } from "./Button";
+import { PaginatedTableView } from "./PaginatedTableView";
 
 type UserSelectModalProps = {
   selectedTasks: Task[];
@@ -51,14 +52,9 @@ export function UserSelectModal({
   return (
     <div className="users-table-modal-backdrop" role="presentation">
       <div className="users-table-modal" role="dialog" aria-modal="true">
-        <button
-          type="button"
-          className="users-table-modal-close"
-          onClick={onClose}
-          aria-label="Close modal"
-        >
+        <Button variant="icon" onClick={onClose} aria-label="Close modal">
           ×
-        </button>
+        </Button>
         <h2 className="users-table-modal-title">
           Assign user to {selectedTasks.length} task
           {selectedTasks.length === 1 ? "" : "s"}
@@ -67,7 +63,7 @@ export function UserSelectModal({
           Select a user to assign immediately. Tasks:{" "}
           {selectedTasksPreview}
         </p>
-        <PaginatedVirtualTableView
+        <PaginatedTableView
           title="Users"
           itemNounPlural="users"
           emptyStateText="No users found for this page."
