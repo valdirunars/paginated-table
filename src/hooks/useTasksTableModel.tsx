@@ -2,10 +2,11 @@ import type { Dispatch, SetStateAction } from "react";
 import { useMemo } from "react";
 import type { ColumnDef, PaginationState, Table } from "@tanstack/react-table";
 import type { Task } from "../data/types";
+import { useLocalization } from "../localization/localization";
+import { createColumnsForItemType } from "./table/columns";
 import {
   type TableSelectionMode,
   usePaginatedTableModel,
-  withSelectionColumn,
 } from "./usePaginatedTableModel";
 
 type TasksTableModelArgs = {
@@ -32,43 +33,11 @@ export function useTasksTableModel({
   totalPages,
   selectionMode = { type: "multi" },
 }: TasksTableModelArgs): TasksTableModel {
-  const baseColumns = useMemo<Array<ColumnDef<Task>>>(
-    () => [
-      {
-        accessorKey: "id",
-        header: "ID",
-        size: 80,
-      },
-      {
-        accessorKey: "name",
-        header: "Task",
-        size: 260,
-      },
-      {
-        id: "assignee",
-        header: "Assignee",
-        size: 260,
-        accessorFn: (task) => task.assignee?.displayName ?? "Unassigned",
-      },
-      {
-        id: "due",
-        header: "Due",
-        size: 220,
-        accessorFn: (task) => new Date(task.due).toLocaleDateString(),
-      },
-    ],
-    [],
-  );
+  const { translate } = useLocalization();
 
   const columns = useMemo(
-    () =>
-      withSelectionColumn(
-        baseColumns,
-        (task) => `task ${task.name}`,
-        () => "tasks",
-        selectionMode,
-      ),
-    [baseColumns, selectionMode],
+    () => createColumnsForItemType("task", translate, selectionMode),
+    [selectionMode, translate],
   );
 
   const { table, selectedRowsCount, selectedRowIds } = usePaginatedTableModel<Task>({

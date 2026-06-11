@@ -9,10 +9,12 @@ import type { BulkActionType, Task, User } from "./data/types";
 import { useTasksPageData } from "./hooks/useTasksPageData";
 import { assertNever } from "./utils";
 import { useTasksTableModel } from "./hooks/useTasksTableModel";
+import { useLocalization } from "./localization/localization";
 import { useCallback, useState } from "react";
 import { toast } from "react-toastify";
 
 function TasksTable() {
+  const { translate } = useLocalization();
   const [selectedTasksForAssignment, setSelectedTasksForAssignment] = useState<
     Task[] | null
   >(null);
@@ -55,7 +57,9 @@ function TasksTable() {
             batchArchiveTasks(selectedRowIds);
           } catch (error) {
             toast.error(
-              error instanceof Error ? error.message : "Failed to archive selected tasks",
+              error instanceof Error
+                ? error.message
+                : translate("tasks.failedArchive"),
             );
             return;
           }
@@ -65,7 +69,9 @@ function TasksTable() {
             batchDeleteTasks(selectedRowIds);
           } catch (error) {
             toast.error(
-              error instanceof Error ? error.message : "Failed to delete selected tasks",
+              error instanceof Error
+                ? error.message
+                : translate("tasks.failedDelete"),
             );
             return;
           }
@@ -77,7 +83,7 @@ function TasksTable() {
       table.resetRowSelection();
       void retry();
     },
-    [table, retry],
+    [table, retry, translate],
   );
 
   const handleAssignUser = useCallback(
@@ -95,7 +101,7 @@ function TasksTable() {
         toast.error(
           error instanceof Error
             ? error.message
-            : "Failed to assign user to selected tasks",
+            : translate("tasks.failedAssign"),
         );
         return;
       }
@@ -103,15 +109,16 @@ function TasksTable() {
       table.resetRowSelection();
       void retry();
     },
-    [retry, selectedTasksForAssignment, table],
+    [retry, selectedTasksForAssignment, table, translate],
   );
 
   return (
     <>
       <PaginatedTableView
-        title="Paginated Tasks Table"
-        itemNounPlural="tasks"
-        emptyStateText="No tasks found for this page."
+        title={translate("tasks.title")}
+        itemNounPlural={translate("tasks.itemNounPlural")}
+        emptyStateText={translate("tasks.emptyState")}
+        searchPlaceholder={translate("pagination.searchTasks")}
         columns={columns}
         table={table}
         pagination={pagination}
@@ -124,19 +131,25 @@ function TasksTable() {
           {
             type: "delete",
             confirmation: {
-              title: (selectedItems) => `Delete ${selectedItems.length} task(s)?`,
-              description:
-                "This action permanently removes the selected tasks and cannot be undone.",
-              confirmButtonText: "Delete tasks",
+              title: (selectedItems) =>
+                translate("tasks.deleteConfirmTitle", {
+                  values: { count: selectedItems.length },
+                }),
+              description: translate("tasks.deleteConfirmDescription"),
+              confirmButtonText: translate("tasks.deleteConfirmButton"),
               renderPreview: (selectedItems) => (
-                <ul className="users-table-modal-preview-list">
+                <ul className="m-0 list-disc pl-4">
                   {selectedItems.slice(0, 8).map((task) => (
                     <li key={task.id}>
                       #{task.id} - {task.name}
                     </li>
                   ))}
                   {selectedItems.length > 8 ? (
-                    <li>...and {selectedItems.length - 8} more</li>
+                    <li>
+                      {translate("tasks.previewAndMore", {
+                        values: { count: selectedItems.length - 8 },
+                      })}
+                    </li>
                   ) : null}
                 </ul>
               ),

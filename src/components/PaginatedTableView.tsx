@@ -3,18 +3,42 @@ import type { ColumnDef, PaginationState, Table } from "@tanstack/react-table";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import type { BulkActionType } from "../data/types";
+import {
+  BulkActionsBar,
+  BulkActionsBarSkeleton,
+  Button,
+  ErrorAlert,
+  Input,
+  InputSkeleton,
+  PaginationSkeleton,
+  SelectLanguage,
+  SelectLanguageSkeleton,
+  surfaces,
+  TableCellSkeleton,
+  Typography,
+  TypographySkeleton,
+} from "../design-system";
 import type { TableSelectionMode } from "../hooks/usePaginatedTableModel";
+import { useLocalization } from "../localization/localization";
+import {
+  localeDisplay,
+  locales,
+  type Locale,
+  type TranslateFn,
+} from "../localization/translations";
 import { assertNever } from "../utils";
-import { Button } from "./Button";
 
-const getBulkActionLabel = (action: BulkActionType): string => {
+const getBulkActionLabel = (
+  action: BulkActionType,
+  translate: TranslateFn,
+): string => {
   switch (action) {
     case "assign":
-      return "Assign";
+      return translate("bulkActions.assign");
     case "archive":
-      return "Archive";
+      return translate("bulkActions.archive");
     case "delete":
-      return "Delete";
+      return translate("bulkActions.delete");
     default:
       return assertNever(action);
   }
@@ -50,6 +74,7 @@ type PaginatedTableViewBaseProps<TData> = {
   title: string;
   itemNounPlural: string;
   emptyStateText: string;
+  searchPlaceholder?: string;
   columns: Array<ColumnDef<TData>>;
   table: Table<TData>;
   pagination: PaginationState;
@@ -66,6 +91,13 @@ type PaginatedTableViewBaseProps<TData> = {
   errorMessage: string | null;
   onRetry: () => void;
   showPageHeader?: boolean;
+  skeletonRowCount?: number;
+  skeletonSearch?: boolean;
+  skeletonBulkActions?: boolean;
+  skeletonTitle?: boolean;
+  skeletonPageInfo?: boolean;
+  skeletonLanguage?: boolean;
+  skeletonPagination?: boolean;
 };
 
 type PaginatedTableViewProps<TData> =
@@ -82,6 +114,7 @@ export function PaginatedTableView<TData>({
   title,
   itemNounPlural,
   emptyStateText,
+  searchPlaceholder,
   columns,
   table,
   pagination,
@@ -99,15 +132,24 @@ export function PaginatedTableView<TData>({
   errorMessage,
   onRetry,
   showPageHeader = true,
+  skeletonRowCount,
+  skeletonSearch = false,
+  skeletonBulkActions = false,
+  skeletonTitle = false,
+  skeletonPageInfo = false,
+  skeletonLanguage = false,
+  skeletonPagination = false,
 }: PaginatedTableViewProps<TData>) {
+  const { translate, locale, setLocale } = useLocalization();
   const { rows } = table.getRowModel();
-  const selectedItems = table.getSelectedRowModel().rows.map((row) => row.original);
+  const selectedItems = table
+    .getSelectedRowModel()
+    .rows.map((row) => row.original);
   const hasLoadError = Boolean(errorMessage);
-  const [pendingAction, setPendingAction] = useState<BulkActionConfig<TData> | null>(
-    null,
-  );
+  const [pendingAction, setPendingAction] =
+    useState<BulkActionConfig<TData> | null>(null);
   const skeletonRows = Array.from(
-    { length: Math.max(6, pagination.pageSize) },
+    { length: skeletonRowCount ?? Math.max(6, pagination.pageSize) },
     (_, rowIndex) => ({
       id: `skeleton-${rowIndex}`,
       cells: Array.from({ length: columns.length }, (_, cellIndex) => ({
@@ -122,87 +164,131 @@ export function PaginatedTableView<TData>({
   };
 
   const headerPageInfo = isLoading
-    ? `Loading page ${pagination.pageIndex + 1}...`
+    ? translate("pagination.loadingPage", {
+        values: { page: pagination.pageIndex + 1 },
+      })
     : hasLoadError
-      ? `Showing page ${pagination.pageIndex + 1} (unable to load total pages, ${totalItems} ${itemNounPlural})`
-      : `Showing page ${pagination.pageIndex + 1} of ${totalPages} (${totalItems} ${itemNounPlural})`;
+      ? translate("pagination.showingPageWithError", {
+          values: {
+            page: pagination.pageIndex + 1,
+            count: totalItems,
+            items: itemNounPlural,
+          },
+        })
+      : translate("pagination.showingPage", {
+          values: {
+            page: pagination.pageIndex + 1,
+            totalPages,
+            count: totalItems,
+            items: itemNounPlural,
+          },
+        });
 
   const footerPageInfo = isLoading
-    ? `Page ${pagination.pageIndex + 1} (loading total pages...)`
+    ? translate("pagination.pageLoadingTotal", {
+        values: { page: pagination.pageIndex + 1 },
+      })
     : hasLoadError
-      ? `Page ${pagination.pageIndex + 1} (total pages unavailable)`
-      : `Page ${pagination.pageIndex + 1} of ${totalPages}`;
+      ? translate("pagination.pageTotalUnavailable", {
+          values: { page: pagination.pageIndex + 1 },
+        })
+      : translate("pagination.pageOfTotal", {
+          values: {
+            page: pagination.pageIndex + 1,
+            totalPages,
+          },
+        });
+
+  const languageOptions = locales.map((optionLocale) => ({
+    value: optionLocale,
+    ...localeDisplay[optionLocale],
+  }));
 
   return (
-    <div className="users-table-container">
+    <div className="flex min-h-table-min flex-1 flex-col gap-ui-md">
       {showPageHeader ? (
-        <div className="app-page-header">
-          <h1>{title}</h1>
-          <p className="users-table-page-info">{headerPageInfo}</p>
+        <div className="flex shrink-0 items-baseline justify-between gap-ui-lg">
+          {skeletonTitle ? (
+            <TypographySkeleton variant="h1" />
+          ) : (
+            <Typography variant="h1">{title}</Typography>
+          )}
+          <div className="flex shrink-0 items-center gap-ui-md">
+            {skeletonPageInfo ? (
+              <TypographySkeleton variant="caption" />
+            ) : (
+              <Typography variant="caption" className="m-0">
+                {headerPageInfo}
+              </Typography>
+            )}
+            {skeletonLanguage ? (
+              <SelectLanguageSkeleton />
+            ) : (
+              <SelectLanguage
+                value={locale}
+                options={languageOptions}
+                onChange={(nextLocale) => setLocale(nextLocale as Locale)}
+                ariaLabel={translate("common.selectLanguage")}
+              />
+            )}
+          </div>
         </div>
       ) : null}
-      <div className="users-table-header">
-        <label className="users-table-search">
-          <span className="users-table-search-label">Search</span>
-          <input
-            type="search"
-            className="users-table-search-input"
-            value={searchQuery}
-            onChange={(event) => onSearchQueryChange(event.target.value)}
-            placeholder={`Search ${itemNounPlural}`}
-          />
-        </label>
+      <div className="flex shrink-0 flex-col gap-ui-sm">
+        {skeletonSearch ? (
+          <InputSkeleton />
+        ) : (
+          <label className="flex items-center gap-ui-sm">
+            <Input
+              type="search"
+              value={searchQuery}
+              onChange={(event) => onSearchQueryChange(event.target.value)}
+              placeholder={searchPlaceholder ?? `Search ${itemNounPlural}`}
+            />
+          </label>
+        )}
         {showBulkActions ? (
-          <div
-            className="users-table-bulk-actions"
-            role={selectedRowsCount > 0 ? "status" : undefined}
-            aria-live={selectedRowsCount > 0 ? "polite" : undefined}
-          >
-            <span className="users-table-bulk-selection">
-              {selectedRowsCount > 0 ? `${selectedRowsCount} selected` : "None selected"}
-            </span>
-            <div className="users-table-bulk-buttons">
-              <Button
-                hidden={selectedRowsCount === 0}
-                onClick={() => table.resetRowSelection()}
-                disabled={selectedRowsCount === 0}
-                tabIndex={selectedRowsCount > 0 ? 0 : -1}
-                aria-hidden={selectedRowsCount === 0}
-              >
-                Clear selection
-              </Button>
-              {bulkActions.map((action) => (
-                <Button
-                  key={action.type}
-                  variant={action.type === "delete" ? "destructive" : "default"}
-                  hidden={selectedRowsCount === 0}
-                  onClick={() => {
-                    if (action.confirmation) {
-                      setPendingAction(action);
-                      return;
-                    }
-                    executeBulkAction(action.type);
-                  }}
-                  disabled={selectedRowsCount === 0}
-                  tabIndex={selectedRowsCount > 0 ? 0 : -1}
-                  aria-hidden={selectedRowsCount === 0}
-                >
-                  {action.label ?? getBulkActionLabel(action.type)}
-                </Button>
-              ))}
-            </div>
-          </div>
+          skeletonBulkActions ? (
+            <BulkActionsBarSkeleton />
+          ) : (
+            <BulkActionsBar
+              selectionLabel={
+                selectedRowsCount > 0
+                  ? translate("pagination.selectedCount", {
+                      values: { count: selectedRowsCount },
+                    })
+                  : translate("common.noneSelected")
+              }
+              clearSelectionLabel={translate("common.clearSelection")}
+              showActions={selectedRowsCount > 0}
+              onClearSelection={() => table.resetRowSelection()}
+              actions={bulkActions.map((action) => ({
+                id: action.type,
+                label:
+                  action.label ?? getBulkActionLabel(action.type, translate),
+                variant: action.type === "delete" ? "destructive" : "default",
+                onClick: () => {
+                  if (action.confirmation) {
+                    setPendingAction(action);
+                    return;
+                  }
+                  executeBulkAction(action.type);
+                },
+              }))}
+            />
+          )
         ) : null}
       </div>
       {errorMessage ? (
-        <div className="users-table-error" role="alert">
-          <span>{errorMessage}</span>
-          <Button onClick={onRetry}>Retry</Button>
-        </div>
+        <ErrorAlert
+          message={errorMessage}
+          onRetry={onRetry}
+          retryLabel={translate("common.retry")}
+        />
       ) : null}
-      <div className="users-table-layout">
-        <div className="users-table-scroll-region">
-          <table className="users-table">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div className={surfaces.tableScroll}>
+          <table className="mt-0 w-full table-fixed border-collapse">
             <thead>
               {table.getHeaderGroups().map((headerGroup) => (
                 <tr key={headerGroup.id}>
@@ -211,6 +297,7 @@ export function PaginatedTableView<TData>({
                       key={header.id}
                       colSpan={header.colSpan}
                       style={{ width: header.getSize() }}
+                      className={surfaces.tableHeaderCell}
                     >
                       {header.isPlaceholder ? null : header.column.getCanSort() ? (
                         <Button
@@ -242,15 +329,18 @@ export function PaginatedTableView<TData>({
                 skeletonRows.map((row) => (
                   <tr key={row.id} aria-hidden="true">
                     {row.cells.map((cell) => (
-                      <td key={cell.id}>
-                        <span className="users-table-skeleton" />
+                      <td key={cell.id} className={surfaces.tableCell}>
+                        <TableCellSkeleton />
                       </td>
                     ))}
                   </tr>
                 ))
               ) : rows.length === 0 ? (
                 <tr>
-                  <td colSpan={columns.length} className="users-table-empty">
+                  <td
+                    colSpan={columns.length}
+                    className={`${surfaces.tableCell} text-center text-foreground-subtle`}
+                  >
                     {emptyStateText}
                   </td>
                 </tr>
@@ -258,7 +348,7 @@ export function PaginatedTableView<TData>({
                 rows.map((row) => (
                   <tr
                     key={row.id}
-                    className="users-table-row"
+                    className="cursor-pointer hover:[&>td]:bg-surface-subtle"
                     aria-selected={row.getIsSelected()}
                     onClick={(event) => {
                       const target = event.target as HTMLElement;
@@ -282,8 +372,11 @@ export function PaginatedTableView<TData>({
                     }}
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <td key={cell.id}>
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      <td key={cell.id} className={surfaces.tableCell}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
                       </td>
                     ))}
                   </tr>
@@ -292,50 +385,71 @@ export function PaginatedTableView<TData>({
             </tbody>
           </table>
         </div>
-        <div className="users-table-pagination">
-          <p className="users-table-pagination-info">{footerPageInfo}</p>
-          <div className="users-table-pagination-actions">
-            <Button
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage() || isLoading}
-            >
-              Previous
-            </Button>
-            <Button
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage() || isLoading}
-            >
-              Next
-            </Button>
-          </div>
+        <div className="mt-ui-md flex shrink-0 items-center justify-between">
+          {skeletonPagination ? (
+            <PaginationSkeleton className="w-full" />
+          ) : (
+            <>
+              <Typography variant="body-sm" className="m-0">
+                {footerPageInfo}
+              </Typography>
+              <div className="flex gap-ui-sm">
+                <Button
+                  onClick={() => table.previousPage()}
+                  disabled={!table.getCanPreviousPage() || isLoading}
+                >
+                  {translate("common.previous")}
+                </Button>
+                <Button
+                  onClick={() => table.nextPage()}
+                  disabled={!table.getCanNextPage() || isLoading}
+                >
+                  {translate("common.next")}
+                </Button>
+              </div>
+            </>
+          )}
         </div>
       </div>
       {pendingAction?.confirmation ? (
-        <div className="users-table-modal-backdrop" role="presentation">
-          <div className="users-table-modal" role="dialog" aria-modal="true">
-            <h2 className="users-table-modal-title">
+        <div className={surfaces.modalBackdrop} role="presentation">
+          <div className={surfaces.modal} role="dialog" aria-modal="true">
+            <Typography variant="h2" className="mb-2">
               {resolveBulkActionConfirmationValue(
                 pendingAction.confirmation.title ??
-                  `Confirm ${getBulkActionLabel(pendingAction.type).toLowerCase()}`,
+                  translate("bulkActions.confirmAction", {
+                    values: {
+                      action: getBulkActionLabel(
+                        pendingAction.type,
+                        translate,
+                      ).toLowerCase(),
+                    },
+                  }),
                 selectedItems,
               )}
-            </h2>
+            </Typography>
             {pendingAction.confirmation.description ? (
-              <p className="users-table-modal-description">
+              <Typography
+                variant="body-sm"
+                className="mb-3 text-foreground-secondary"
+              >
                 {resolveBulkActionConfirmationValue(
                   pendingAction.confirmation.description,
                   selectedItems,
                 )}
-              </p>
+              </Typography>
             ) : null}
             {pendingAction.confirmation.renderPreview ? (
-              <div className="users-table-modal-preview">
+              <div
+                className={`max-h-preview-max overflow-auto px-ui-md py-ui-sm ${surfaces.panelInset}`}
+              >
                 {pendingAction.confirmation.renderPreview(selectedItems)}
               </div>
             ) : null}
-            <div className="users-table-modal-actions">
+            <div className="mt-ui-md flex justify-end gap-ui-sm">
               <Button onClick={() => setPendingAction(null)}>
-                {pendingAction.confirmation.cancelButtonText ?? "Cancel"}
+                {pendingAction.confirmation.cancelButtonText ??
+                  translate("common.cancel")}
               </Button>
               <Button
                 variant={
@@ -344,7 +458,7 @@ export function PaginatedTableView<TData>({
                 onClick={() => executeBulkAction(pendingAction.type)}
               >
                 {pendingAction.confirmation.confirmButtonText ??
-                  getBulkActionLabel(pendingAction.type)}
+                  getBulkActionLabel(pendingAction.type, translate)}
               </Button>
             </div>
           </div>

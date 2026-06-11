@@ -1,0 +1,1 @@
+export { usePaginatedTableSkeletonModel } from "./usePaginatedTableSkeletonModel";

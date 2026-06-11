@@ -1,5 +1,5 @@
-import type { ChangeEventHandler, Dispatch, SetStateAction } from "react";
-import { useEffect, useRef, useState } from "react";
+import type { Dispatch, SetStateAction } from "react";
+import { useState } from "react";
 import {
   getCoreRowModel,
   getPaginationRowModel,
@@ -13,37 +13,8 @@ import type {
   SortingState,
   Table,
 } from "@tanstack/react-table";
-
-type IndeterminateCheckboxProps = {
-  checked: boolean;
-  indeterminate?: boolean;
-  onChange?: ChangeEventHandler<HTMLInputElement>;
-  ariaLabel: string;
-};
-
-function IndeterminateCheckbox({
-  checked,
-  indeterminate = false,
-  onChange,
-  ariaLabel,
-}: IndeterminateCheckboxProps) {
-  const ref = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (!ref.current) return;
-    ref.current.indeterminate = !checked && indeterminate;
-  }, [checked, indeterminate]);
-
-  return (
-    <input
-      ref={ref}
-      type="checkbox"
-      checked={checked}
-      onChange={onChange}
-      aria-label={ariaLabel}
-    />
-  );
-}
+import { Checkbox } from "../design-system";
+import type { TranslateFn } from "../localization/translations";
 
 type UsePaginatedTableModelArgs<TData extends { id: number }> = {
   items: TData[];
@@ -71,6 +42,7 @@ export function withSelectionColumn<TData extends { id: number }>(
   getItemLabel: (item: TData) => string,
   getPluralLabel: () => string,
   selectionMode: TableSelectionMode = { type: "multi" },
+  translate: TranslateFn,
 ): Array<ColumnDef<TData>> {
   if (selectionMode.type === "single") {
     return columns;
@@ -83,18 +55,22 @@ export function withSelectionColumn<TData extends { id: number }>(
       enableSorting: false,
       enableGlobalFilter: false,
       header: ({ table }) => (
-        <IndeterminateCheckbox
+        <Checkbox
           checked={table.getIsAllPageRowsSelected()}
           indeterminate={table.getIsSomePageRowsSelected()}
           onChange={table.getToggleAllPageRowsSelectedHandler()}
-          ariaLabel={`Select all ${getPluralLabel()} on this page`}
+          aria-label={translate("a11y.selectAllOnPage", {
+            values: { items: getPluralLabel() },
+          })}
         />
       ),
       cell: ({ row }) => (
-        <IndeterminateCheckbox
+        <Checkbox
           checked={row.getIsSelected()}
           onChange={row.getToggleSelectedHandler()}
-          ariaLabel={`Select ${getItemLabel(row.original)}`}
+          aria-label={translate("a11y.selectItem", {
+            values: { label: getItemLabel(row.original) },
+          })}
         />
       ),
     },

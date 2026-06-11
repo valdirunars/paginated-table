@@ -1,8 +1,9 @@
 import { useMemo } from "react";
 import type { Task, User } from "../data/types";
+import { Button, surfaces, Typography } from "../design-system";
 import { useUsersPageData } from "../hooks/useUsersPageData";
 import { useUsersTableModel } from "../hooks/useUsersTableModel";
-import { Button } from "./Button";
+import { useLocalization } from "../localization/localization";
 import { PaginatedTableView } from "./PaginatedTableView";
 
 type UserSelectModalProps = {
@@ -16,6 +17,7 @@ export function UserSelectModal({
   onAssign,
   onClose,
 }: UserSelectModalProps) {
+  const { translate } = useLocalization();
   const {
     pagination,
     setPagination,
@@ -38,35 +40,44 @@ export function UserSelectModal({
     selectionMode: { type: "single", behavior: "hard" },
   });
 
-  const selectedTasksPreview = useMemo(
-    () =>
-      selectedTasks.length > 5
-        ? `${selectedTasks
-            .slice(0, 5)
-            .map((task) => task.name)
-            .join(", ")} and ${selectedTasks.length - 5} more`
-        : selectedTasks.map((task) => task.name).join(", "),
-    [selectedTasks],
-  );
+  const selectedTasksPreview = useMemo(() => {
+    const taskNames = selectedTasks.map((task) => task.name);
+    if (selectedTasks.length > 5) {
+      return `${taskNames.slice(0, 5).join(", ")}${translate("assignModal.andMore", {
+        values: { count: selectedTasks.length - 5 },
+      })}`;
+    }
+    return taskNames.join(", ");
+  }, [selectedTasks, translate]);
+
+  const assignModalTitle =
+    selectedTasks.length === 1
+      ? translate("assignModal.titleSingular", {
+          values: { count: selectedTasks.length },
+        })
+      : translate("assignModal.titlePlural", {
+          values: { count: selectedTasks.length },
+        });
 
   return (
-    <div className="users-table-modal-backdrop" role="presentation">
-      <div className="users-table-modal" role="dialog" aria-modal="true">
-        <Button variant="icon" onClick={onClose} aria-label="Close modal">
+    <div className={surfaces.modalBackdrop} role="presentation">
+      <div className={surfaces.modal} role="dialog" aria-modal="true">
+        <Button variant="icon" onClick={onClose} aria-label={translate("common.closeModal")}>
           ×
         </Button>
-        <h2 className="users-table-modal-title">
-          Assign user to {selectedTasks.length} task
-          {selectedTasks.length === 1 ? "" : "s"}
-        </h2>
-        <p className="users-table-modal-description">
-          Select a user to assign immediately. Tasks:{" "}
-          {selectedTasksPreview}
-        </p>
+        <Typography variant="h2" className="mb-2">
+          {assignModalTitle}
+        </Typography>
+        <Typography variant="body-sm" className="mb-3 text-foreground-secondary">
+          {translate("assignModal.description", {
+            values: { tasks: selectedTasksPreview },
+          })}
+        </Typography>
         <PaginatedTableView
-          title="Users"
-          itemNounPlural="users"
-          emptyStateText="No users found for this page."
+          title={translate("users.modalTitle")}
+          itemNounPlural={translate("users.itemNounPlural")}
+          emptyStateText={translate("users.emptyState")}
+          searchPlaceholder={translate("pagination.searchUsers")}
           columns={columns}
           table={table}
           pagination={pagination}

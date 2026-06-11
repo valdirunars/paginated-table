@@ -1,8 +1,10 @@
 import { PaginatedTableView } from "./components/PaginatedTableView";
 import { useUsersPageData } from "./hooks/useUsersPageData";
 import { useUsersTableModel } from "./hooks/useUsersTableModel";
+import { useLocalization } from "./localization/localization";
 
 function UsersTable() {
+  const { translate } = useLocalization();
   const {
     pagination,
     setPagination,
@@ -26,9 +28,10 @@ function UsersTable() {
 
   return (
     <PaginatedTableView
-      title="Paginated Users Table"
-      itemNounPlural="users"
-      emptyStateText="No users found for this page."
+      title={translate("users.title")}
+      itemNounPlural={translate("users.itemNounPlural")}
+      emptyStateText={translate("users.emptyState")}
+      searchPlaceholder={translate("pagination.searchUsers")}
       columns={columns}
       table={table}
       pagination={pagination}

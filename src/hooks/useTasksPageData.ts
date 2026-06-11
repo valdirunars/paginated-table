@@ -2,6 +2,7 @@ import type { Dispatch, SetStateAction } from "react";
 import type { PaginationState } from "@tanstack/react-table";
 import { fetchTasksPage } from "../data/tasks";
 import type { Task } from "../data/types";
+import { useLocalization } from "../localization/localization";
 import {
   usePaginatedPageData,
   type PaginatedPageDataState,
@@ -21,9 +22,11 @@ export type TasksPageDataState = {
 };
 
 export function useTasksPageData(): TasksPageDataState {
+  const { translate } = useLocalization();
+
   const state: PaginatedPageDataState<Task> = usePaginatedPageData<Task>({
     fetchPage: fetchTasksPage,
-    fallbackErrorMessage: "Failed to fetch tasks page",
+    fallbackErrorMessage: translate("tasks.failedFetch"),
   });
 
   return {

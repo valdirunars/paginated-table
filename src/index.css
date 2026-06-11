@@ -1,18 +1,17 @@
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
+@import "tailwindcss";
+@import "./design-system/theme.css";
 
-body {
-  margin: 0;
-  font-family: system-ui, sans-serif;
-  line-height: 1.5;
-  -webkit-font-smoothing: antialiased;
-}
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
 
-h1 {
-  margin: 0;
-  font-size: 1.5rem;
-  font-weight: 600;
+  body {
+    margin: 0;
+    font-family: var(--font-sans);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
 }

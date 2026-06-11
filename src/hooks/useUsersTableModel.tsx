@@ -2,10 +2,11 @@ import type { Dispatch, SetStateAction } from "react";
 import { useMemo } from "react";
 import type { ColumnDef, PaginationState, Table } from "@tanstack/react-table";
 import type { User } from "../data/types";
+import { useLocalization } from "../localization/localization";
+import { createColumnsForItemType } from "./table/columns";
 import {
   type TableSelectionMode,
   usePaginatedTableModel,
-  withSelectionColumn,
 } from "./usePaginatedTableModel";
 
 type UsersTableModelArgs = {
@@ -32,36 +33,11 @@ export function useUsersTableModel({
   totalPages,
   selectionMode = { type: "multi" },
 }: UsersTableModelArgs): UsersTableModel {
-  const baseColumns = useMemo<Array<ColumnDef<User>>>(
-    () => [
-      {
-        accessorKey: "id",
-        header: "ID",
-        size: 80,
-      },
-      {
-        accessorKey: "displayName",
-        header: "Name",
-        size: 260,
-      },
-      {
-        accessorKey: "email",
-        header: "Email",
-        size: 320,
-      },
-    ],
-    [],
-  );
+  const { translate } = useLocalization();
 
   const columns = useMemo(
-    () =>
-      withSelectionColumn(
-        baseColumns,
-        (user) => `user ${user.displayName}`,
-        () => "users",
-        selectionMode,
-      ),
-    [baseColumns, selectionMode],
+    () => createColumnsForItemType("user", translate, selectionMode),
+    [selectionMode, translate],
   );
 
   const { table, selectedRowsCount, selectedRowIds } = usePaginatedTableModel<User>({
