@@ -10,6 +10,7 @@ import { useTasksPageData } from "./hooks/useTasksPageData";
 import { assertNever } from "./utils";
 import { useTasksTableModel } from "./hooks/useTasksTableModel";
 import { useCallback, useState } from "react";
+import { toast } from "react-toastify";
 
 function TasksTable() {
   const [selectedTasksForAssignment, setSelectedTasksForAssignment] = useState<
@@ -50,10 +51,24 @@ function TasksTable() {
           setSelectedTasksForAssignment(selectedItems);
           return;
         case "archive":
-          batchArchiveTasks(selectedRowIds);
+          try {
+            batchArchiveTasks(selectedRowIds);
+          } catch (error) {
+            toast.error(
+              error instanceof Error ? error.message : "Failed to archive selected tasks",
+            );
+            return;
+          }
           break;
         case "delete":
-          batchDeleteTasks(selectedRowIds);
+          try {
+            batchDeleteTasks(selectedRowIds);
+          } catch (error) {
+            toast.error(
+              error instanceof Error ? error.message : "Failed to delete selected tasks",
+            );
+            return;
+          }
           break;
         default:
           assertNever(action);
@@ -71,10 +86,19 @@ function TasksTable() {
         return;
       }
 
-      assignUserToTasks(
-        selectedTasksForAssignment.map((task) => task.id),
-        user.id,
-      );
+      try {
+        assignUserToTasks(
+          selectedTasksForAssignment.map((task) => task.id),
+          user.id,
+        );
+      } catch (error) {
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "Failed to assign user to selected tasks",
+        );
+        return;
+      }
       setSelectedTasksForAssignment(null);
       table.resetRowSelection();
       void retry();

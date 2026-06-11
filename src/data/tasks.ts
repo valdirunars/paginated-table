@@ -12,6 +12,12 @@ import type { Task } from "./types";
 
 export type PaginatedTasksResult = PaginatedMockItemsResult<"task">;
 
+const maybeThrowRandomBulkActionError = (operation: string): void => {
+  if (Math.random() < RANDOM_ERROR_PROBABILITY) {
+    throw new Error(`Failed to ${operation}`);
+  }
+};
+
 export const fetchTasksPage = (
   page: number,
   pageSize: number,
@@ -33,10 +39,12 @@ export const fetchTasksPage = (
   });
 
 export const batchDeleteTasks = (ids: number[]): void => {
+  maybeThrowRandomBulkActionError("delete selected tasks");
   removeItems("task", ids);
 };
 
 export const batchArchiveTasks = (ids: number[]): void => {
+  maybeThrowRandomBulkActionError("archive selected tasks");
   for (const id of ids) {
     const task = getItem("task", id);
     if (!task) {
@@ -47,6 +55,7 @@ export const batchArchiveTasks = (ids: number[]): void => {
 };
 
 export const batchUpdateTasks = (tasks: Task[]): void => {
+  maybeThrowRandomBulkActionError("update selected tasks");
   for (const task of tasks) {
     setItem({ ...task, type: "task" });
   }
@@ -68,6 +77,7 @@ export const assignUserToTask = (taskId: number, userId: number): void => {
 };
 
 export const assignUserToTasks = (taskIds: number[], userId: number): void => {
+  maybeThrowRandomBulkActionError("assign user to selected tasks");
   const user = getItem("user", userId);
 
   if (!user) {

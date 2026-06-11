@@ -11,6 +11,12 @@ import type { User } from "./types";
 
 export type PaginatedUsersResult = PaginatedMockItemsResult<"user">;
 
+const maybeThrowRandomBulkActionError = (operation: string): void => {
+  if (Math.random() < RANDOM_ERROR_PROBABILITY) {
+    throw new Error(`Failed to ${operation}`);
+  }
+};
+
 export const fetchUsersPage = (
   page: number,
   pageSize: number,
@@ -32,10 +38,12 @@ export const fetchUsersPage = (
   });
 
 export const batchDeleteUsers = (ids: number[]): void => {
+  maybeThrowRandomBulkActionError("delete selected users");
   removeItems("user", ids);
 };
 
 export const batchUpdateUsers = (users: User[]): void => {
+  maybeThrowRandomBulkActionError("update selected users");
   for (const user of users) {
     setItem({ ...user, type: "user" });
   }

@@ -157,7 +157,7 @@ async function archiveTasks(taskIds: number[]) {
       SET status = 'archived', updated_at = NOW()
       WHERE id = ANY($1::int[])
       `,
-      [taskIds]
+      [taskIds],
     );
 
     // Treat partial success as a failure so the whole operation is rolled back.
@@ -215,3 +215,15 @@ Some generated approaches preferred type casts instead of using the existing nar
 
 - Data is stored in `localStorage` under `mockItems:*` keys.
 - To reset demo data, clear site storage in your browser and reload.
+
+## What I'd do differently with more time?
+
+How long do you guys have 😅
+
+This implementation was just over an hour of implementation and then an extra hour went to documentation and minor refactoring throughout.
+
+- It has no design system.
+- It has now architecture when it comes to UX, there is intentionally very minimal css to make this not too much to read for you guys. Just keep the simple stuff
+- There is essentially not a proper API contract, I'm mocking pagination and searchQuery as if they were pure API calls that need no auth
+- In a production application I would have a proper SessionContext architecture which could at the very least provide token or session auth for fetching data to each domain, in this case useTasksAPI domain and useUsersAPI domain (since I have tasks which has assign users)
+- Also there is no virtualization, when pagesize is big and each row has images which need fetching, or we need to have User-generated content translations this becomes vital for app performance. But alas no time.

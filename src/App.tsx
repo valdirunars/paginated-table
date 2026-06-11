@@ -3,6 +3,8 @@ import { populateTasks } from "./data/tasks";
 import TasksTable from "./TasksTable";
 import "./App.css";
 import { useEffect } from "react";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 function App() {
   useEffect(() => {
@@ -17,6 +19,7 @@ function App() {
   return (
     <main className="app">
       <TasksTable />
+      <ToastContainer position="top-right" autoClose={4000} />
     </main>
   );
 }
