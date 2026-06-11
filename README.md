@@ -82,6 +82,14 @@ Selection is row-id based. Select-all is page-scoped because only the current pa
 - Data is stored in `localStorage` under `mockItems:*` keys.
 - To reset demo data, clear site storage in your browser and reload.
 
+## Partial failure handling
+
+I chose an all-or-nothing bulk action contract for this exercise. Each bulk action is sent as one mocked API request with the selected IDs, and the mutation either succeeds for every selected row or fails without applying changes. That keeps the frontend state simple and avoids showing a mixed result that the mock API cannot reliably reconcile.
+
+In a real backend I would enforce this with a PostgreSQL transaction: validate the target records, apply the mutation, and roll back on failure. In this UI, a failed request leaves the selection intact and shows an error so the user can retry or change the selection.
+
+If the backend instead returned per-row results, I would handle that explicitly by showing how many rows succeeded and failed, refreshing successful rows, and keeping failed rows selected for retry.
+
 ## What I'd do differently with more time?
 
 How long do you guys have 😅
