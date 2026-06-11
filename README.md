@@ -1,6 +1,6 @@
 # Paginated Table Demo
 
-A React + TypeScript + Vite demo app for a paginated, searchable, selectable virtualized table with bulk actions.
+A React + TypeScript + Vite demo app for a paginated, searchable, selectable table with bulk actions.
 
 ## Run the app
 
@@ -45,10 +45,10 @@ npm run lint    # Run ESLint
   - Shared pagination/search fetching logic.
   - Good place to tune loading/error/reset behavior.
 
-- `src/components/PaginatedVirtualTableView.tsx`
+- `src/components/PaginatedTableView.tsx`
   - Generic table UI: header, search box, row rendering, pagination controls, and bulk-action confirmation modal.
 
-- `src/TasksVirtualTable.tsx` and `src/UsersVirtualTable.tsx`
+- `src/TasksTable.tsx` and `src/UsersTable.tsx`
   - Feature-specific table wiring (columns, actions, labels, and bulk action handlers).
 
 - `src/App.css`
@@ -59,7 +59,7 @@ npm run lint    # Run ESLint
 
 ### Generic bulk action confirmation configuration
 
-The table view supports a generic confirmation model for bulk actions via `BulkActionConfig<TData>` and `BulkActionConfirmationConfig<TData>` in `src/components/PaginatedVirtualTableView.tsx`.
+The table view supports a generic confirmation model for bulk actions via `BulkActionConfig<TData>` and `BulkActionConfirmationConfig<TData>` in `src/components/PaginatedTableView.tsx`.
 
 This was implemented to make bulk action verification reusable across different table domains (for example `Task` and `User`) without coupling confirmation UI behavior to one specific data shape.
 
@@ -72,7 +72,7 @@ Key design points:
 
 ### Selection behavior and bulk action visibility
 
-`PaginatedVirtualTableView` supports configurable selection behavior and optional bulk action UI visibility.
+`PaginatedTableView` supports configurable selection behavior and optional bulk action UI visibility.
 
 Selection is configured with `selectionMode`:
 
@@ -133,10 +133,6 @@ Table data state tracks only the current page, because only that page is visible
 **Explicit retry path**
 
 Fetch failures provide an explicit retry path in the UI.
-
-**Virtualized rendering**
-
-The table is virtualized to improve rendering/update performance with larger datasets.
 
 **Partial-action handling as backend concern**
 
@@ -201,7 +197,7 @@ This preserves inference and makes type narrowing more reliable.
 
 **2) Separation of concerns in table wiring**
 
-Initial implementations put all setup logic inside `UsersVirtualTable`. The architecture was refactored so that:
+Initial implementations put all setup logic inside `UsersTable`. The architecture was refactored so that:
 
 - table configuration lives in its own hook,
 - data fetching + state transitions live in their own hook,
