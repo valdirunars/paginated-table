@@ -133,3 +133,13 @@ AI confused search with TanStack's page search, causing issues with search not u
 ### Disagreement with AI nr. 4
 
 AI was skipping using the proper type narrowing set up by our types file for the mock data and preferring casting instead. Super annoying, but mainly my fault, I forgot function overloads giving way for the type narrowing.
+
+---
+
+## P.S. Updates after the initial implementation
+
+Since the first version, I found an extra hour to add a little bit more just so there's a little more to talk about:
+
+- `src/design-system` now contains a small atomic design system implementation. It gives the app a simple shared foundation for composing UI from smaller reusable building blocks.
+- `src/localization` adds a lightweight localization setup for managing locales in a React app. The nice bit is the type-safe dot syntax with completion, so translation keys are easier to discover and harder to mistype.
+- `?style=landonorris` unlocks the fun easter egg: an implementation for the product manager who said "you know what we need for our table... the animation on Lando Norris' website. It's amazing!"
