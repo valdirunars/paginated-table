@@ -101,3 +101,35 @@ This implementation was just over an hour of implementation and then an extra ho
 - In a production application I would have a proper SessionContext architecture which could at the very least provide token or session auth for fetching data to each domain, in this case useTasksAPI domain and useUsersAPI domain (since I have tasks which has assign users)
 - I would also want to have proper permission handling based on the session, since there is no login there is no production grade permission handling
 - Also there is no virtualization, when pagesize is big and each row has images which need fetching, or we need to have User-generated content translations this becomes vital for app performance. But alas no time
+
+## Disagreements with AI
+
+I'm sometimes called "One-Take Valdi" but not this time 😅
+
+### Disagreement with AI nr. 1
+
+So first off when I was setting up the mock data layer AI was regularly suggesting types that weren't fully type safe:
+
+```ts
+MockType<T> = { type: ItemType } & T;
+```
+
+This is not good enough since we want to be able to infer the TypeScript type by simply knowing the type of the item:
+
+```ts
+export type MockItem<T extends ItemType = ItemType> = ItemTypeMap[T] & {
+  type: T;
+};
+```
+
+### Disagreement with AI nr. 2
+
+When implementing the `UsersVirtualTable`, all setup was done in the component. We want separation of concerns: table configuration should be its own hook, and data fetching + state updates should be its own hook, detached from UI rendering.
+
+### Disagreement with AI nr. 3
+
+AI confused search with TanStack's page search, causing issues with search not using "backend" level filtering.
+
+### Disagreement with AI nr. 4
+
+AI was skipping using the proper type narrowing set up by our types file for the mock data and preferring casting instead. Super annoying, but mainly my fault, I forgot function overloads giving way for the type narrowing.
